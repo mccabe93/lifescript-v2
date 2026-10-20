@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\LifeScript\LifeScript.csproj" />
+    <ProjectReference Include="..\..\external\CellularAutomata.NET\CellularAutomata.NET\CellularAutomata.NET.csproj" />
+  </ItemGroup>
+</Project>

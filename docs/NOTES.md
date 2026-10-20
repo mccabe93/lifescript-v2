@@ -40,10 +40,10 @@ committing to them for automata.surf.
 
 ## Engine
 
-11. **Speed.** The interpreter takes ~0.7 µs per cell (forest fire: ~20 ms/step at 30k cells).
-    Lookup-table types are dominated by summing neighbors through the library's cell objects.
-    The next steps: a dense-array fast path in CellularAutomata.NET, then threads, then a GPU
-    backend generated from the same lookup tables.
+11. **Speed.** The built-in engine (flat array, active cells, single thread) runs forest fire
+    at ~7 ms/step on 30k cells and Amoeba 3D at ~8 ms (Debug build). The interpreter is most of
+    that. Next: threads, then a GPU engine generated from the same lookup tables. Engines plug
+    in through `IEngine`, so the language doesn't depend on any of them.
 12. **3D starting patterns.** RLE is 2D only; 3D worlds can use `random` and placements.
 13. **History view.** v1's `addrow` grew the world to show 1D rules over time. A render mode that
     stacks generations would do that without changing the world.

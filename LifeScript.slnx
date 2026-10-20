@@ -7,7 +7,9 @@
   <Folder Name="/tests/">
     <Project Path="tests/LifeScript.Tests/LifeScript.Tests.csproj" />
   </Folder>
-  <Folder Name="/external/">
+  <Folder Name="/adapters/">
+    <Project Path="src/LifeScript.CellularAutomataNet/LifeScript.CellularAutomataNet.csproj" />
+    <Project Path="tests/LifeScript.CellularAutomataNet.Tests/LifeScript.CellularAutomataNet.Tests.csproj" />
     <Project Path="external/CellularAutomata.NET/CellularAutomata.NET/CellularAutomata.NET.csproj" />
   </Folder>
 </Solution>

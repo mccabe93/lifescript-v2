@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Numerics;
-using CellularAutomata.NET;
 
 namespace LifeScript;
 
@@ -18,41 +16,44 @@ public sealed record CellInspection(
 );
 
 /// <summary>
-/// Runs a compiled script on CellularAutomata.NET. Each cell's state is one byte: a
-/// (type, state) id from <see cref="CompiledProgram"/>.
+/// Runs a compiled script. Each cell's state is one byte: a (type, state) id from
+/// <see cref="CompiledProgram"/>. Stepping the grid is up to an <see cref="IEngine"/>.
 /// </summary>
 public sealed class Simulation
 {
     private readonly EvalContext _ctx;
-    private readonly CellularAutomataDimension[] _dimensions;
-    private CellularAutomata<byte> _automaton = null!;
+    private readonly IEngine _engine;
+    private readonly CellRule _rule;
+    private long _generation;
     private byte[] _ids;
     private byte[] _previous;
     private ushort[] _ages;
     private readonly bool _needsAge;
 
-    public Simulation(CompiledProgram program, bool useLut = true)
+    public Simulation(CompiledProgram program, bool useLut = true, IEngine? engine = null)
     {
         Program = program;
-        UseLut = useLut;
         _ctx = new EvalContext(program);
         Lut.EnsureQueries(_ctx, program.MaxQueries);
-        _dimensions = program.Size
-            .Select((size, d) => new CellularAutomataDimension { Cells = size, WrapStart = program.Wrap[d], WrapEnd = program.Wrap[d] })
-            .ToArray();
         _ids = new byte[program.CellCount];
         _previous = new byte[program.CellCount];
         _ages = new ushort[program.CellCount];
         _needsAge = program.Types.Any(t => t.UsesAge);
+        _rule = new CellRule(program, _ctx, _ages) { UseLut = useLut };
+        _engine = engine ?? new DenseEngine();
         Reset();
     }
 
     public CompiledProgram Program { get; }
 
     /// <summary>Use lookup tables where available. Off forces the interpreter (for parity checks).</summary>
-    public bool UseLut { get; set; }
+    public bool UseLut
+    {
+        get => _rule.UseLut;
+        set => _rule.UseLut = value;
+    }
 
-    public long Generation => _automaton.Generation;
+    public long Generation => _generation;
 
     /// <summary>Current (type, state) id of every cell, first dimension fastest.</summary>
     public ReadOnlySpan<byte> Ids => _ids;
@@ -68,20 +69,7 @@ public sealed class Simulation
 
     public void Reset()
     {
-        var config = new CellularAutomataConfiguration<byte>
-        {
-            Dimensions = _dimensions,
-            DefaultState = Program.DefaultId,
-            UpdateMode = Program.UpdateMode == UpdateMode.AllCells
-                ? CellularAutomataUpdateMode.AllCells
-                : CellularAutomataUpdateMode.ActiveCells,
-        };
-        var neighborhood = new CellularAutomataNeighborhood<byte>
-        {
-            NeighborLocations = Program.UnionOffsets.Select(o => AutomataVector.Create(o)).ToArray(),
-        };
-        _automaton = new CellularAutomata<byte>(config, neighborhood, Rule);
-
+        _generation = 0;
         Array.Clear(_ctx.Globals);
         Array.Fill(_ids, Program.DefaultId);
         Array.Clear(_ages);
@@ -101,8 +89,7 @@ public sealed class Simulation
             _ctx.World = null;
             _ctx.Trace = null;
         }
-        _automaton.InitializeGrid(_ids);
-        _ids.CopyTo(_previous, 0);
+        _engine.Reset(_rule, _ids);
     }
 
     private void ApplyStart()
@@ -214,15 +201,17 @@ public sealed class Simulation
     public void Step()
     {
         var watch = Stopwatch.StartNew();
-        _ctx.Generation = _automaton.Generation;
+        _ctx.Generation = _generation;
         if (Program.World != null)
         {
             RunWorld();
         }
-        LastActiveCells = _automaton.ActiveCellCount;
-        _automaton.Step();
-        (_previous, _ids) = (_ids, _previous);
-        _automaton.Grid.CopyStatesTo(_ids);
+        if (_needsAge)
+        {
+            _ids.CopyTo(_previous, 0);
+        }
+        LastActiveCells = _engine.Step();
+        _generation++;
         if (_needsAge)
         {
             for (int i = 0; i < _ids.Length; i++)
@@ -246,11 +235,12 @@ public sealed class Simulation
             Stmt.ExecBlock(Program.World.Body, _ctx);
             if (_ctx.World.Edits.Count > 0)
             {
-                _automaton.InitializeGrid(_ctx.World.Edits.ToDictionary(e => PositionVector(e.Key), e => e.Value));
-                foreach (var index in _ctx.World.Edits.Keys)
+                foreach (var (index, id) in _ctx.World.Edits)
                 {
+                    _ids[index] = id;
                     _ages[index] = 0;
                 }
+                _engine.Edited(_ctx.World.Edits.Keys);
             }
         }
         finally
@@ -260,54 +250,22 @@ public sealed class Simulation
         }
     }
 
-    private Vector<int> PositionVector(int index) => AutomataVector.Create(PositionOf(index));
-
     /// <summary>Sets cells to an id (painting). Takes effect immediately.</summary>
     public void Paint(IEnumerable<int> indices, byte id)
     {
-        var edits = new Dictionary<Vector<int>, byte>();
+        var edited = new List<int>();
         foreach (int index in indices)
         {
             if (index >= 0 && index < _ids.Length)
             {
-                edits[PositionVector(index)] = id;
+                edited.Add(index);
                 _ids[index] = id;
                 _ages[index] = 0;
             }
         }
-        if (edits.Count > 0)
+        if (edited.Count > 0)
         {
-            _automaton.InitializeGrid(edits);
-        }
-    }
-
-    private void Rule(CellularAutomataCell<byte> cell, CellularAutomataNeighbors<byte> neighbors, CellularAutomata<byte> automaton)
-    {
-        byte id = cell.State;
-        var type = Program.Types[Program.TypeOf[id]];
-        var c = _ctx;
-        byte missing = Program.DefaultId;
-        foreach (int u in type.UsedUnion)
-        {
-            c.Neighbors[u] = neighbors.GetState(u, missing);
-        }
-        c.CellIndex = cell.Index;
-        if (type.UsesAge)
-        {
-            c.Age = _ages[cell.Index];
-        }
-        if (type.UsesPosition)
-        {
-            var p = cell.Position;
-            for (int d = 0; d < Program.Size.Length; d++)
-            {
-                c.Position[d] = p[d];
-            }
-        }
-        byte next = CellEvaluator.Evaluate(c, type, id, UseLut);
-        if (next != id)
-        {
-            cell.SetState(next);
+            _engine.Edited(edited);
         }
     }
 
@@ -330,7 +288,7 @@ public sealed class Simulation
         }
         c.CellIndex = index;
         c.Age = _ages[index];
-        c.Generation = _automaton.Generation;
+        c.Generation = _generation;
         for (int d = 0; d < position.Length; d++)
         {
             c.Position[d] = position[d];

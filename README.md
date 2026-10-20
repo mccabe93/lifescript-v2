@@ -1,8 +1,10 @@
 # lifescript sandbox
 
 A testbed for **lifescript v2**, the rule language planned for [automata.surf](https://automata.surf).
-It revives [lifescript](https://github.com/mccabe93/lifescript) (2013) and runs scripts on
-[CellularAutomata.NET](https://github.com/mccabe93/CellularAutomata.NET).
+It revives [lifescript](https://github.com/mccabe93/lifescript) (2013). The language library
+has no dependencies: it parses, compiles and runs scripts on its own engine. Other engines plug in
+through `IEngine`; [CellularAutomata.NET](https://github.com/mccabe93/CellularAutomata.NET) is
+one, in an optional adapter.
 
 - [docs/LANGUAGE.md](docs/LANGUAGE.md): the language as implemented here
 - [docs/NOTES.md](docs/NOTES.md): open design questions to try out
@@ -12,14 +14,17 @@ It revives [lifescript](https://github.com/mccabe93/lifescript) (2013) and runs 
 
 Requires the .NET 10 SDK.
 
+The library, CLI, viewer and main tests need nothing else. The CellularAutomata.NET adapter
+needs its submodule:
+
 ```bash
-git clone --recurse-submodules <this repo>
-# or, in an existing clone:
 git submodule update --init
+dotnet test tests/LifeScript.CellularAutomataNet.Tests
 ```
 
-`external/CellularAutomata.NET` is a submodule pinned to the `claude-01` branch of
-CellularAutomata.NET-innerivy, which has the update modes and neighbor tables this sandbox uses.
+`external/CellularAutomata.NET` is pinned to the `claude-01` branch of
+CellularAutomata.NET-innerivy. Building the whole solution (`dotnet build LifeScript.slnx`)
+includes the adapter, so it needs the submodule too.
 
 ## Viewer
 
@@ -59,21 +64,25 @@ dotnet run --project src/LifeScript.Cli -- bench samples/conway.ls -n 500
 ## Tests
 
 ```bash
-dotnet test
+dotnet test tests/LifeScript.Tests
 ```
 
 Covers the parser and its error positions, the locality rules, Life/Wolfram/Wireworld behavior,
 2D and 3D neighborhoods against a naive reference stepper, deterministic randomness, active-cell
 vs all-cell stepping, the world block, the inspector, and lookup-table vs interpreter parity for
-every sample.
+every sample. `tests/LifeScript.CellularAutomataNet.Tests` checks that every sample gives the
+same grids on CellularAutomata.NET as on the built-in engine.
 
 ## Layout
 
 ```
-src/LifeScript          lexer, parser, compiler (binder + lookup tables), runtime on CellularAutomata.NET
-src/LifeScript.Cli      check / info / run / parity / bench
-src/LifeScript.Viewer   Silk.NET + ImGui testbed
+src/LifeScript                       lexer, parser, compiler (binder + lookup tables), runtime,
+                                     IEngine and the built-in DenseEngine. No dependencies
+src/LifeScript.Cli                   check / info / run / parity / bench
+src/LifeScript.Viewer                Silk.NET + ImGui testbed
+src/LifeScript.CellularAutomataNet   optional: IEngine on CellularAutomata.NET
 tests/LifeScript.Tests
-samples/                *.ls scripts
-external/               CellularAutomata.NET (submodule)
+tests/LifeScript.CellularAutomataNet.Tests   engine parity
+samples/                             *.ls scripts
+external/                            CellularAutomata.NET (submodule, adapter only)
 ```

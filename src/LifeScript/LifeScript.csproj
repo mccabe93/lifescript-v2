@@ -1,8 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\..\external\CellularAutomata.NET\CellularAutomata.NET\CellularAutomata.NET.csproj" />
-  </ItemGroup>
-  <ItemGroup>
     <InternalsVisibleTo Include="LifeScript.Tests" />
   </ItemGroup>
 </Project>
