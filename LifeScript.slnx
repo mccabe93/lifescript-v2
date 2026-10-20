@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LifeScript/LifeScript.csproj" />
+    <Project Path="src/LifeScript.Cli/LifeScript.Cli.csproj" />
+    <Project Path="src/LifeScript.Viewer/LifeScript.Viewer.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LifeScript.Tests/LifeScript.Tests.csproj" />
+  </Folder>
+  <Folder Name="/external/">
+    <Project Path="external/CellularAutomata.NET/CellularAutomata.NET/CellularAutomata.NET.csproj" />
+  </Folder>
+</Solution>

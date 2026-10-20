@@ -1,0 +1,4 @@
+[submodule "external/CellularAutomata.NET"]
+	path = external/CellularAutomata.NET
+	url = git@github.com:1130-Lab/CellularAutomata.NET-innerivy.git
+	branch = claude-01
