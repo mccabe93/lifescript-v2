@@ -1,4 +1,4 @@
-# lifescript sandbox
+# lifescript v2
 
 A testbed for **lifescript v2**, the rule language planned for [automata.surf](https://automata.surf).
 It revives [lifescript](https://github.com/mccabe93/lifescript) (2013). The language library
