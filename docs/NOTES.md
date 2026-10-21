@@ -33,8 +33,10 @@ committing to them for automata.surf.
    to type?
 8. **Precedence.** v1 gave `&` and `|` the same precedence; v2 makes `&` bind tighter. `!(n in
    [9..26])` needs parentheses. Add `not in`?
-9. **A rule-table shorthand?** Many rules are "born on X, survive on Y". Something like
-   `born [3] survive [2, 3]` could sit alongside the general form.
+9. **Rule-table shorthand.** `born [3] survive [2, 3]` exists now. In B/S notation unlisted
+   counts mean dead, but elsewhere a cell that writes nothing keeps its state, so the dying is
+   built into `born/survive` (see `life-3d-b4.ls`). Still open: a Generations form, e.g.
+   `born [2] survive [] decay 3`, for rules like Brian's Brain.
 10. **Properties.** Multi-word names (`Default Type`) are a fixed list. Keep them, or switch to
     single identifiers?
 

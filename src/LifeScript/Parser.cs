@@ -18,7 +18,7 @@ public sealed class Parser
     private static readonly HashSet<string> StatementStarts =
     [
         "if", "for", "while", "alive", "dead", "setstate", "become", "print", "return",
-        "create", "kill", "addrow", "addcolumn", "input", "end", "Neighborhood", "States",
+        "create", "kill", "addrow", "addcolumn", "input", "end", "Neighborhood", "States", "born",
         "statecolor", "setcolor",
     ];
 
@@ -30,6 +30,8 @@ public sealed class Parser
     public static ScriptAst Parse(string source) => new Parser(Lexer.Tokenize(source)).ParseScript();
 
     private Token Current => _tokens[_pos];
+
+    private Token Previous => _tokens[Math.Max(0, _pos - 1)];
 
     private Token Peek(int ahead = 1) => _tokens[Math.Min(_pos + ahead, _tokens.Count - 1)];
 
@@ -236,8 +238,8 @@ public sealed class Parser
         Next();
         var span = Current.Span;
         string name = Current.Kind == TokenKind.String ? Next().Text : ExpectIdentifier("a type name");
-        Expect(":", "after the type name");
-        var type = new TypeDecl(name, span);
+        var colon = Expect(":", "after the type name");
+        var type = new TypeDecl(name, span) { HeaderEnd = colon.Span.End };
         while (!Current.Is("endtype"))
         {
             if (Current.Kind == TokenKind.End)
@@ -250,7 +252,19 @@ public sealed class Parser
                 {
                     throw Error("Neighborhood is declared twice.");
                 }
+                int start = Current.Span.Offset;
                 type.Neighborhood = ParseNeighborhood();
+                type.NeighborhoodRange = new SourceRange(start, Previous.Span.End);
+            }
+            else if (Current.Is("born"))
+            {
+                if (type.BornSurvive != null)
+                {
+                    throw Error("born ... survive ... is declared twice.");
+                }
+                var (rule, statement) = ParseBornSurvive();
+                type.BornSurvive = rule;
+                type.Body.Add(statement);
             }
             else if (Current.Is("States") && Peek().Is("="))
             {
@@ -283,8 +297,68 @@ public sealed class Parser
                 type.Body.Add(ParseStatement());
             }
         }
-        Next();
+        type.BodyEnd = Next().Span.Offset;
         return type;
+    }
+
+    /// <summary>
+    /// <c>born [3] survive [2, 3]</c>, the B3/S23 notation: a dead cell comes alive when its
+    /// neighbor sum is listed after born, and a live cell stays alive only when it's listed after
+    /// survive. Counts that aren't listed mean dead, unlike the rest of lifescript, where a cell
+    /// that writes nothing keeps its state. Becomes the equivalent if statement.
+    /// </summary>
+    private (BornSurvive, Stmt) ParseBornSurvive()
+    {
+        var span = Next().Span;
+        var born = ParseCountList("born");
+        Expect("survive", "after the born list (born [3] survive [2, 3])");
+        var survive = ParseCountList("survive");
+        var range = new SourceRange(span.Offset, Previous.Span.End);
+
+        InExpr Counts(int[] counts) =>
+            new(new NeighborsExpr(null, null, span), counts.Select(c => ((Expr)new NumberExpr(c, span), (Expr?)null)).ToList(), span);
+        Stmt Set(int state) => new SetStateStmt(new NumberExpr(state, span), span);
+        Expr alive = new BuiltinExpr(BuiltinValue.Alive, span);
+
+        var statement = new IfStmt(
+            [
+                (alive, [new IfStmt([(new UnaryExpr("!", Counts(survive), span), [Set(0)])], null, span)]),
+                (Counts(born), [Set(1)]),
+            ],
+            null,
+            span
+        );
+        return (new BornSurvive(born, survive, range), statement);
+    }
+
+    /// <summary>A list of whole-number neighbor counts like [2, 3] or [3, 6..8].</summary>
+    private int[] ParseCountList(string what)
+    {
+        Expect("[", $"to start the {what} list, like [2, 3]");
+        var counts = new SortedSet<int>();
+        int Count()
+        {
+            var e = ParseAdditive();
+            if (e.Constant is not double v || v != Math.Floor(v) || v < 0 || v > 10_000)
+            {
+                throw Error($"The {what} list needs whole numbers like [2, 3] or [3, 6..8].", e.Span);
+            }
+            return (int)v;
+        }
+        if (!Current.Is("]"))
+        {
+            do
+            {
+                int low = Count();
+                int high = Accept("..") ? Count() : low;
+                for (int c = low; c <= high; c++)
+                {
+                    counts.Add(c);
+                }
+            } while (Accept(","));
+        }
+        Expect("]", $"to close the {what} list");
+        return counts.ToArray();
     }
 
     private NeighborhoodSpec ParseNeighborhood()
@@ -485,6 +559,8 @@ public sealed class Parser
                 }
                 return new ForStmt(init, limit, step, body, span);
             }
+            case "born":
+                throw Error("born ... survive ... describes a whole type's rule, so it goes directly inside the type, not inside if, for, def or world.");
             case "while":
                 throw Error("while loops are not supported: every cell must finish in bounded time. Use for i = a to b.");
             case "input":

@@ -8,7 +8,7 @@ one, in an optional adapter.
 
 - [docs/LANGUAGE.md](docs/LANGUAGE.md): the language as implemented here
 - [docs/NOTES.md](docs/NOTES.md): open design questions to try out
-- [samples/](samples): Life, Rule 30, Wireworld, Brian's Brain, forest fire, rain, Larger than Life, 3D rules, and the original v1 `conway.ls` unchanged
+- [samples/](samples): Life, Rule 30, Wireworld, Brian's Brain, forest fire, rain, Larger than Life, 3D rules (including B4/S), and the original v1 `conway.ls` unchanged
 
 ## Setup
 

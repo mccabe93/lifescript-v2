@@ -78,7 +78,7 @@ public static class Lexer
             }
 
             int startLine = line, startCol = col, start = i;
-            SourceSpan Span() => new(startLine, startCol, i - start);
+            SourceSpan Span() => new(startLine, startCol, i - start) { Offset = start };
 
             if (char.IsLetter(c) || c == '_')
             {
@@ -153,7 +153,7 @@ public static class Lexer
                 tokens.Add(new Token(TokenKind.Symbol, symbol, 0, Span()));
             }
         }
-        tokens.Add(new Token(TokenKind.End, "", 0, new SourceSpan(line, col, 0)));
+        tokens.Add(new Token(TokenKind.End, "", 0, new SourceSpan(line, col, 0) { Offset = i }));
         return tokens;
     }
 }

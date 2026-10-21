@@ -82,6 +82,25 @@ If nothing is written, the cell stays as it is.
 | `become "T" with state expr` | next type and state |
 | `return` | stop evaluating this cell |
 | `print "n = ", n` | shown in the viewer's cell inspector |
+| `born [3] survive [2, 3]` | the B/S rule notation (below) |
+
+### born / survive
+
+`born [3] survive [2, 3]` is Life, written the way Golly and LifeWiki write B3/S23. A dead cell
+comes alive when `neighbors` is in the born list. A live cell stays alive when it's in the
+survive list, **and dies otherwise**. In B/S notation every count that isn't listed means dead,
+while elsewhere in lifescript a cell that writes nothing keeps its state, so the dying is built
+into this statement. It's short for:
+
+```
+if alive then
+    if !(neighbors in [2, 3]) then dead endif
+elseif neighbors in [3] then alive endif
+```
+
+Lists take ranges (`born [3, 6..8]`), and either list can be empty: `born [4] survive []` is
+B4/S, where every live cell lives for exactly one generation. It goes directly inside a type,
+at most once, and statements after it can still override it (the last write wins).
 
 Declarations inside a type (anywhere in it):
 

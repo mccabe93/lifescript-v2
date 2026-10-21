@@ -512,10 +512,25 @@ public sealed record BuiltinNeighborhood(string Name, Expr? Radius, SourceSpan S
 
 public sealed record ColorSpec(byte R, byte G, byte B);
 
+/// <summary>A range of source text, as 0-based character offsets (end exclusive).</summary>
+public readonly record struct SourceRange(int Start, int End);
+
+/// <summary><c>born [3] survive [2, 3]</c>: the counts, expanded from any ranges.</summary>
+public sealed record BornSurvive(int[] Born, int[] Survive, SourceRange Range);
+
 public sealed class TypeDecl(string name, SourceSpan span) : Node(span)
 {
     public string Name { get; } = name;
+
+    /// <summary>Just after the colon in <c>type name:</c>, where new declarations can go.</summary>
+    public int HeaderEnd { get; set; }
+
+    /// <summary>Just before <c>endtype</c>.</summary>
+    public int BodyEnd { get; set; }
+
     public NeighborhoodSpec? Neighborhood { get; set; }
+    public SourceRange? NeighborhoodRange { get; set; }
+    public BornSurvive? BornSurvive { get; set; }
     public Expr? States { get; set; }
     public ColorSpec? Color { get; set; }
     public Dictionary<int, ColorSpec> StateColors { get; } = new();

@@ -5,6 +5,11 @@ public readonly record struct SourceSpan(int Line, int Column, int Length)
 {
     public static readonly SourceSpan None = new(0, 0, 0);
 
+    /// <summary>0-based character offset of the start in the source, for tools that edit it.</summary>
+    public int Offset { get; init; }
+
+    public int End => Offset + Length;
+
     public override string ToString() => Line == 0 ? "?" : $"{Line}:{Column}";
 }
 
