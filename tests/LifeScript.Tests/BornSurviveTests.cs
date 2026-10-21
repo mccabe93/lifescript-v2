@@ -79,6 +79,14 @@ public class BornSurviveTests
         Assert.Equal("endtype", source[decl.BodyEnd..(decl.BodyEnd + 7)]);
     }
 
+    [Fact]
+    public void Statement_ranges_cover_each_rule_statement()
+    {
+        const string source = "type cell:\n    n = neighbors // count\n    if n == 3 then alive\n    else dead endif\nendtype\n";
+        var ranges = Compiler.Compile(source).Types[0].Decl.StatementRanges;
+        Assert.Equal(["n = neighbors", "if n == 3 then alive\n    else dead endif"], ranges.Select(r => source[r.Start..r.End]));
+    }
+
     [Theory]
     [InlineData("type c:\n    born [3] survive [2]\n    born [3] survive [2]\nendtype", "declared twice")]
     [InlineData("type c:\n    if alive then born [3] survive [2] endif\nendtype", "directly inside the type")]

@@ -531,6 +531,9 @@ public sealed class TypeDecl(string name, SourceSpan span) : Node(span)
     public NeighborhoodSpec? Neighborhood { get; set; }
     public SourceRange? NeighborhoodRange { get; set; }
     public BornSurvive? BornSurvive { get; set; }
+
+    /// <summary>Where each rule statement is (not declarations like Neighborhood or born/survive).</summary>
+    public List<SourceRange> StatementRanges { get; } = new();
     public Expr? States { get; set; }
     public ColorSpec? Color { get; set; }
     public Dictionary<int, ColorSpec> StateColors { get; } = new();

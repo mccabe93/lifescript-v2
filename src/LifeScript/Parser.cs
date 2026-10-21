@@ -294,7 +294,9 @@ public sealed class Parser
             }
             else
             {
+                int start = Current.Span.Offset;
                 type.Body.Add(ParseStatement());
+                type.StatementRanges.Add(new SourceRange(start, Previous.Span.End));
             }
         }
         type.BodyEnd = Next().Span.Offset;
