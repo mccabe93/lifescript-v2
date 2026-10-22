@@ -16,13 +16,13 @@ world:
 endworld
 
 type air:
-	setcolor to #0c1222
+	setcolor to #15101b
 	Neighborhood = none
 	if neighbor at (0, -1) is "drop" then become "drop" endif
 endtype
 
 type drop:
-	setcolor to #7cc4ff
+	setcolor to #7fd3e0
 	Neighborhood = none
 	become "air"
 endtype

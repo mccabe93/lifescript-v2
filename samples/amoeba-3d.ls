@@ -10,10 +10,10 @@ Properties:
 type cell:
 	States = 5
 	Neighborhood = moore(1)
-	statecolor 1 is #9fd6ff
-	statecolor 2 is #5f8fd0
-	statecolor 3 is #3d5f9a
-	statecolor 4 is #263c63
+	statecolor 1 is #ffc46b
+	statecolor 2 is #ff8a4c
+	statecolor 3 is #d9668f
+	statecolor 4 is #6b3f8f
 	n = neighbors with state 1
 	if state == 0 then
 		if n in [5..7, 12, 13, 15] then setstate to 1 endif

@@ -8,9 +8,9 @@ Properties:
 type neuron:
 	States = 3
 	Neighborhood = moore(1)
-	statecolor 0 is #0d1117
-	statecolor 1 is #e8f0ff
-	statecolor 2 is #3a5ba0
+	statecolor 0 is #15101b
+	statecolor 1 is #ffe3c2
+	statecolor 2 is #d9668f
 
 	if state == 0 & neighbors with state 1 == 2 then setstate to 1 endif
 	if state == 1 then setstate to 2 endif

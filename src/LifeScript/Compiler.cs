@@ -1119,13 +1119,27 @@ internal sealed class Binder(ScriptAst ast)
         _p.IdCount = Math.Min(id, 256);
     }
 
+    // Colors for scripts that don't pick their own: a sunset over dusk, in the order types use them.
+    private static readonly ColorSpec Background = new(21, 16, 27);
+    private static readonly ColorSpec[] Swatches =
+    [
+        new(245, 230, 211), // sand
+        new(255, 138, 76),  // sunset orange
+        new(127, 211, 224), // sea
+        new(217, 102, 143), // dusk pink
+        new(255, 196, 107), // amber
+        new(169, 139, 214), // lavender
+        new(95, 158, 110),  // dune grass
+    ];
+
     private void BuildPalette()
     {
         uint Pack(ColorSpec c) => c.R | (uint)c.G << 8 | (uint)c.B << 16 | 0xFF000000u;
-        var background = new ColorSpec(16, 20, 26);
+        int swatch = 0;
         foreach (var type in _p.Types)
         {
-            double hue = _p.Types.Length == 1 ? 165 : (type.Index * 137.508 + 40) % 360;
+            // Empty space takes the background, so the first visible type gets the first swatch.
+            var hue = type.Index == _p.DefaultType ? Background : Swatches[swatch++ % Swatches.Length];
             for (int s = 0; s < type.StateCount; s++)
             {
                 ColorSpec color;
@@ -1139,33 +1153,23 @@ internal sealed class Binder(ScriptAst ast)
                 }
                 else if (s == 0)
                 {
-                    color = type.Index == _p.DefaultType ? background : Hsv(hue, 0.5, 0.25);
+                    color = type.Index == _p.DefaultType ? Background : Mix(Background, hue, 0.25);
                 }
                 else
                 {
-                    // State 1 is brightest; higher states (decay) fade.
-                    double v = type.StateCount <= 2 ? 0.95 : 0.95 - 0.6 * (s - 1) / Math.Max(1, type.StateCount - 2);
-                    color = Hsv(hue, 0.55, v);
+                    // State 1 is brightest; higher states (decay) fade toward the background.
+                    double t = type.StateCount <= 2 ? 1 : 1 - 0.7 * (s - 1) / Math.Max(1, type.StateCount - 2);
+                    color = Mix(Background, hue, t);
                 }
                 _p.Palette[type.BaseId + s] = Pack(color);
             }
         }
     }
 
-    private static ColorSpec Hsv(double h, double s, double v)
-    {
-        double c = v * s, x = c * (1 - Math.Abs(h / 60 % 2 - 1)), m = v - c;
-        var (r, g, b) = (int)(h / 60) switch
-        {
-            0 => (c, x, 0.0),
-            1 => (x, c, 0.0),
-            2 => (0.0, c, x),
-            3 => (0.0, x, c),
-            4 => (x, 0.0, c),
-            _ => (c, 0.0, x),
-        };
-        return new ColorSpec((byte)((r + m) * 255), (byte)((g + m) * 255), (byte)((b + m) * 255));
-    }
+    private static ColorSpec Mix(ColorSpec from, ColorSpec to, double t) =>
+        new((byte)Math.Round(from.R + (to.R - from.R) * t),
+            (byte)Math.Round(from.G + (to.G - from.G) * t),
+            (byte)Math.Round(from.B + (to.B - from.B) * t));
 
     private void Analyze()
     {

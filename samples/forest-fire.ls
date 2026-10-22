@@ -13,18 +13,18 @@ Properties:
 
 type ground:
 	Neighborhood = none
-	setcolor to #2b1d12
+	setcolor to #1d1418
 	if chance(growth) then become "tree" endif
 endtype
 
 type tree:
 	Neighborhood = vonneumann(1)
-	setcolor to #2f8f3a
+	setcolor to #5f9e6e
 	if neighbors that are "fire" > 0 | chance(lightning) then become "fire" endif
 endtype
 
 type fire:
 	Neighborhood = none
-	setcolor to #ff7a1a
+	setcolor to #ff6f3c
 	become "ground"
 endtype

@@ -11,24 +11,24 @@ Properties:
 
 type empty:
 	Neighborhood = none
-	setcolor to #0b0e13
+	setcolor to #15101b
 endtype
 
 type copper:
 	Neighborhood = moore(1)
-	setcolor to #d9a33a
+	setcolor to #ffb15c
 	heads = neighbors that are "head"
 	if heads == 1 | heads == 2 then become "head" endif
 endtype
 
 type head:
 	Neighborhood = none
-	setcolor to #4aa8ff
+	setcolor to #7fd3e0
 	become "tail"
 endtype
 
 type tail:
 	Neighborhood = none
-	setcolor to #ff5a3c
+	setcolor to #d9668f
 	become "copper"
 endtype

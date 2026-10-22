@@ -9,7 +9,7 @@ Properties:
 
 type cell:
 	Neighborhood = moore(5)
-	statecolor 1 is #c8f560
+	statecolor 1 is #ffb15c
 	n = neighbors
 	if alive then
 		if n < 34 | n > 58 then dead endif
