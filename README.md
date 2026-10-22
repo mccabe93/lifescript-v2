@@ -19,7 +19,7 @@ needs its submodule:
 
 ```bash
 git submodule update --init
-dotnet test tests/LifeScript.CellularAutomataNet.Tests
+dotnet test --project tests/LifeScript.CellularAutomataNet.Tests
 ```
 
 `external/CellularAutomata.NET` is pinned to the `claude-01` branch of
@@ -64,7 +64,7 @@ dotnet run --project src/LifeScript.Cli -- bench samples/conway.ls -n 500
 ## Tests
 
 ```bash
-dotnet test tests/LifeScript.Tests
+dotnet test --project tests/LifeScript.Tests
 ```
 
 Covers the parser and its error positions, the locality rules, Life/Wolfram/Wireworld behavior,
