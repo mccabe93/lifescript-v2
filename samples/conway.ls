@@ -9,7 +9,7 @@ type life:
 	Neighborhood[3] = { 1,   1, 1,
 	                    1, VAR, 1,
 	                    1,   1, 1 }
-	statecolor 1 is #f5e6d3
+	statecolor 1 is #ff8a4c
 
 	if alive then
 		if neighbors < 2 | neighbors > 3 then dead endif

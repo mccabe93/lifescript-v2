@@ -1,5 +1,5 @@
 Properties:
-	Title = "Conway's Game of Life"
+	Title = "Glider gun (original lifescript)"
 	Cell Size = (10, 10)
 	Dimensions = (60, 60)
 	Wraparound = true

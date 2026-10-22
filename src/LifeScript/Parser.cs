@@ -273,6 +273,7 @@ public sealed class Parser
             }
             else if (Current.Is("statecolor"))
             {
+                int start = Current.Span.Offset;
                 Next();
                 var stateExpr = ParseExpr();
                 if (stateExpr.Constant is not double s || s < 0 || s != Math.Floor(s))
@@ -281,9 +282,11 @@ public sealed class Parser
                 }
                 Expect("is", "in statecolor N is (r, g, b)");
                 type.StateColors[(int)s] = ParseColor();
+                type.StateColorRanges[(int)s] = new SourceRange(start, Previous.Span.End);
             }
             else if (Current.Is("setcolor"))
             {
+                int start = Current.Span.Offset;
                 Next();
                 if (Current.Is("at"))
                 {
@@ -291,6 +294,7 @@ public sealed class Parser
                 }
                 Expect("to", "in setcolor to (r, g, b)");
                 type.Color = ParseColor();
+                type.ColorRange = new SourceRange(start, Previous.Span.End);
             }
             else
             {

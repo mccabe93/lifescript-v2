@@ -1123,8 +1123,8 @@ internal sealed class Binder(ScriptAst ast)
     private static readonly ColorSpec Background = new(21, 16, 27);
     private static readonly ColorSpec[] Swatches =
     [
-        new(245, 230, 211), // sand
         new(255, 138, 76),  // sunset orange
+        new(245, 230, 211), // sand
         new(127, 211, 224), // sea
         new(217, 102, 143), // dusk pink
         new(255, 196, 107), // amber
@@ -1138,8 +1138,11 @@ internal sealed class Binder(ScriptAst ast)
         int swatch = 0;
         foreach (var type in _p.Types)
         {
-            // Empty space takes the background, so the first visible type gets the first swatch.
-            var hue = type.Index == _p.DefaultType ? Background : Swatches[swatch++ % Swatches.Length];
+            // Empty space's state 0 is the background. When other types exist the empty type is
+            // only background, so it doesn't use up a swatch; a single type still gets one for its
+            // live states.
+            bool emptyOnly = type.Index == _p.DefaultType && _p.Types.Length > 1;
+            var hue = emptyOnly ? Background : Swatches[swatch++ % Swatches.Length];
             for (int s = 0; s < type.StateCount; s++)
             {
                 ColorSpec color;

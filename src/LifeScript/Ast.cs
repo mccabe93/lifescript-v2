@@ -536,7 +536,9 @@ public sealed class TypeDecl(string name, SourceSpan span) : Node(span)
     public List<SourceRange> StatementRanges { get; } = new();
     public Expr? States { get; set; }
     public ColorSpec? Color { get; set; }
+    public SourceRange? ColorRange { get; set; }
     public Dictionary<int, ColorSpec> StateColors { get; } = new();
+    public Dictionary<int, SourceRange> StateColorRanges { get; } = new();
     public List<Stmt> Body { get; } = new();
     public int LocalCount { get; set; }
 }
